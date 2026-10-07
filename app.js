@@ -78,46 +78,39 @@ $('#shareSite').addEventListener('click', async () => {
   try { if (navigator.share) await navigator.share(data); else toast(await copyText(data.url) ? '主页链接已复制。' : '请复制浏览器地址分享主页。'); } catch(error) { if (error.name !== 'AbortError') toast(await copyText(data.url) ? '主页链接已复制。' : '请复制浏览器地址分享主页。'); }
 });
 
-// Independently composed, locally synthesized soundtrack; no external audio files.
-let audioContext, masterGain, musicTimer, nextBeatTime, beat = 0;
+// Original soft-rise soundtrack, rendered once and played as a seamless loop.
+let audioContext, masterGain, musicSource, musicBufferPromise;
 let musicOn = false, musicRequest = 0;
-const chords = [[50,57,62,65],[46,53,58,62],[53,60,65,69],[48,55,60,64]];
-const melody = [74,77,81,77,74,72,69,72,70,74,77,74,70,69,65,69];
-const beatLength = 60 / 104;
-function tone(midi,time,duration,volume,type='sine') {
-  const osc=audioContext.createOscillator(), gain=audioContext.createGain();
-  osc.type=type; osc.frequency.value=440*2**((midi-69)/12);
-  gain.gain.setValueAtTime(.0001,time); gain.gain.exponentialRampToValueAtTime(volume,time+.025); gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
-  osc.connect(gain);gain.connect(masterGain);osc.start(time);osc.stop(time+duration+.02);
-}
-function kick(time) {
-  const osc=audioContext.createOscillator(),gain=audioContext.createGain();
-  osc.frequency.setValueAtTime(110,time);osc.frequency.exponentialRampToValueAtTime(42,time+.16);
-  gain.gain.setValueAtTime(.13,time);gain.gain.exponentialRampToValueAtTime(.0001,time+.22);
-  osc.connect(gain);gain.connect(masterGain);osc.start(time);osc.stop(time+.24);
-}
-function scheduleMusic() {
-  while(musicOn && nextBeatTime < audioContext.currentTime+.25) {
-    const chord=chords[Math.floor(beat/8)%4], position=beat%8;
-    if(position===0) chord.forEach(note=>tone(note+12,nextBeatTime,beatLength*7.7,.022,'triangle'));
-    tone(chord[[0,1,2,3,2,1,3,1][position]]+12,nextBeatTime,beatLength*.9,.045,'triangle');
-    if(beat%2===0) tone(melody[(beat/2)%melody.length],nextBeatTime,beatLength*1.75,.034);
-    if(position%2===0) kick(nextBeatTime);
-    if(position===0||position===4) tone(chord[0]-12,nextBeatTime,beatLength*1.7,.08);
-    nextBeatTime+=beatLength;beat++;
-  }
+function updateMusicControls(loading=false) {
+  $('#music').setAttribute('aria-pressed',String(musicOn));$('#music').classList.toggle('playing',musicOn);
+  $('#musicLabel').textContent=loading?'准备音乐…':musicOn?'暂停音乐':'开启音乐';
+  $('#storyMusic').setAttribute('aria-pressed',String(musicOn));$('#storyMusic').textContent=musicOn?'音乐：开':'音乐：关';
 }
 async function setMusic(on) {
-  const request = ++musicRequest;
+  const request=++musicRequest;
   try {
     if(on) {
       const Audio=window.AudioContext||window.webkitAudioContext;
       if(!Audio){toast('当前浏览器暂不支持音乐播放。');return;}
-      if(!audioContext){audioContext=new Audio();masterGain=audioContext.createGain();masterGain.gain.value=.0001;masterGain.connect(audioContext.destination);}
-      await audioContext.resume();if(request!==musicRequest)return;musicOn=true;nextBeatTime=audioContext.currentTime+.06;masterGain.gain.cancelScheduledValues(audioContext.currentTime);masterGain.gain.setTargetAtTime(.65,audioContext.currentTime,.2);scheduleMusic();clearInterval(musicTimer);musicTimer=setInterval(scheduleMusic,80);
-    } else { musicOn=false;clearInterval(musicTimer);if(audioContext){masterGain.gain.cancelScheduledValues(audioContext.currentTime);masterGain.gain.setTargetAtTime(.0001,audioContext.currentTime,.1);} }
-    $('#music').setAttribute('aria-pressed',String(musicOn));$('#music').classList.toggle('playing',musicOn);$('#musicLabel').textContent=musicOn?'暂停音乐':'开启音乐';$('#storyMusic').setAttribute('aria-pressed',String(musicOn));$('#storyMusic').textContent=musicOn?'音乐：开':'音乐：关';
-  } catch {musicOn=false;clearInterval(musicTimer);$('#music').setAttribute('aria-pressed','false');$('#music').classList.remove('playing');$('#musicLabel').textContent='开启音乐';toast('音乐暂时无法播放，请再次点击尝试。');}
+      if(!audioContext)audioContext=new Audio();
+      musicOn=true;updateMusicControls(true);
+      await audioContext.resume();
+      if(!musicBufferPromise)musicBufferPromise=createGentleMusicLoop().catch(error=>{musicBufferPromise=null;throw error;});
+      const buffer=await musicBufferPromise;
+      if(request!==musicRequest||!musicOn)return;
+      masterGain=audioContext.createGain();masterGain.gain.value=0;masterGain.connect(audioContext.destination);
+      musicSource=audioContext.createBufferSource();musicSource.buffer=buffer;musicSource.loop=true;musicSource.loopEnd=buffer.duration;
+      musicSource.connect(masterGain);musicSource.start();
+      masterGain.gain.linearRampToValueAtTime(.8,audioContext.currentTime+1.5);
+    } else {
+      musicOn=false;
+      if(musicSource){const oldSource=musicSource,oldGain=masterGain;musicSource=null;const now=audioContext.currentTime;oldGain.gain.cancelScheduledValues(now);oldGain.gain.setValueAtTime(oldGain.gain.value,now);oldGain.gain.linearRampToValueAtTime(0,now+.35);oldSource.onended=()=>{oldSource.disconnect();oldGain.disconnect();};oldSource.stop(now+.4);}
+    }
+    updateMusicControls();
+  } catch {
+    if(request!==musicRequest)return;
+    musicOn=false;updateMusicControls();toast('音乐暂时无法播放，请再次点击尝试。');
+  }
 }
 $('#music').addEventListener('click',()=>setMusic(!musicOn));
 $('#storyMusic').addEventListener('click',()=>setMusic(!musicOn));
