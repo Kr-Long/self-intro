@@ -1,0 +1,23 @@
+:root{--bg:#100d0a;--panel:#251b16;--ink:#eee4cf;--muted:#bcaf99;--mint:#edc17d;--peach:#ef906d;--line:#ead1a126}
+body{background:var(--bg);isolation:isolate}
+.ambient-background{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 15% 12%,#67251d55,transparent 53%),radial-gradient(ellipse at 85% 35%,#74302245,transparent 48%),radial-gradient(ellipse at 20% 92%,#6c5a2c40,transparent 56%),linear-gradient(135deg,#1b100d,#100c09 55%,#17140d)}
+.ambient-background:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 30%,#07060555);pointer-events:none}
+#starfield{display:block;width:100%;height:100%;opacity:.85}
+main{position:relative;z-index:1}.topbar{background:#1a100ddc;border-color:#ead1a122}.chapter-rail{z-index:20}
+.reading-progress i{background:linear-gradient(90deg,#ec6d40,#efc77e)}
+.primary{background:linear-gradient(115deg,#eb6135,#e3ad5c);color:#1a1009;border-radius:28px}.secondary,.music-button{background:#180f0b35;border-color:#d8bd8c30}.secondary{border-radius:28px}
+h1>span,.contact>h2>span{color:var(--mint)}
+.orbit{border-color:#d6aa4b28}.orbit-two{border-color:#d6aa4b20}.orbit-one:after{box-shadow:0 0 25px #f4864e70}.status-dot{box-shadow:0 0 0 5px #edc17d0c}
+.entj-sticker{background:linear-gradient(130deg,#f2d598,#e7ad65);color:#27170d;box-shadow:5px 5px 0 #080604}.portrait-frame{background:#dfd0b8}
+.ticker{background:linear-gradient(105deg,#db7e45,#e8be79 50%,#f2d8a3);color:#231810}.ticker-inner i{opacity:.55}
+.card,.goal-card{background:linear-gradient(135deg,#3a221c90,#191511b3);border-color:#d8bd8c28;box-shadow:0 15px 50px #00000012;backdrop-filter:blur(5px)}
+.card:hover{border-color:#e7b76a66}.personality-art span{border-color:#edc17d66;background:#edc17d0b;box-shadow:4px 4px 0 #2b211b}
+.student-art>span{color:#e98f6b}.friend-art>span{color:#e0cba4;border-color:#e0cba444}.friend-art i{background:#251c16;color:#e0cba4}
+.interest-card{background:#2d211ba3;border-color:#d8bd8c26;backdrop-filter:blur(5px)}.interest-card.active{background:linear-gradient(125deg,#e7ac63,#edcb90);border-color:#e7b76a;color:#231810}.interest-card.active small,.interest-card.active>span,.interest-card.active i{color:#624222}
+.interest-display{background:radial-gradient(ellipse at 80% 0,#7d32223a,transparent 65%),linear-gradient(135deg,#342920b0,#19130ee0);border-color:#d8bd8c30;backdrop-filter:blur(6px)}
+.symbol-art:before,.symbol-art:after{border-color:#dcab5045}.vinyl{background:repeating-radial-gradient(circle,#130e0a 0 2px,#36271f 3px,#130e0a 4px)}.vinyl>div{background:linear-gradient(135deg,#ed7045,#dcad61)}
+.goal-card:nth-child(3) .goal-icon{color:#e0cba4}.offer{background:linear-gradient(130deg,#38251b50,#17120d30);border-top-color:#d8bd8c38}
+blockquote{background:radial-gradient(ellipse at 25% 95%,#c6984622,transparent 62%),radial-gradient(ellipse at 90% 0,#9d3b2520,transparent 55%),#18120d50;border-color:#d8bd8c28;backdrop-filter:blur(4px)}
+.chapter-rail a.active{box-shadow:0 0 0 4px #edc17d16}.story-dialog{background:radial-gradient(ellipse at 90% 0,#64271e50,transparent 65%),#17110d;border-color:#edc17d40}.story-dialog::backdrop{background:#080604e8}.story-art{background:radial-gradient(circle,#b9743324,transparent 70%)}
+.toast{background:#efc98c;color:#24170c}
+@media(prefers-reduced-motion:reduce){#starfield{opacity:.7}}

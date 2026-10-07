@@ -78,40 +78,38 @@ $('#shareSite').addEventListener('click', async () => {
   try { if (navigator.share) await navigator.share(data); else toast(await copyText(data.url) ? '主页链接已复制。' : '请复制浏览器地址分享主页。'); } catch(error) { if (error.name !== 'AbortError') toast(await copyText(data.url) ? '主页链接已复制。' : '请复制浏览器地址分享主页。'); }
 });
 
-// Original soft-rise soundtrack, rendered once and played as a seamless loop.
-let audioContext, masterGain, musicSource, musicBufferPromise;
-let musicOn = false, musicRequest = 0;
-function updateMusicControls(loading=false) {
+// Background music supplied by the site owner. Keep the original recording.
+const backgroundMusic = new Audio();
+backgroundMusic.loop=true;backgroundMusic.preload='none';backgroundMusic.volume=.55;
+let musicOn=false,musicRequest=0,musicLoadPromise;
+function loadProvidedMusic(){
+  if(!musicLoadPromise)musicLoadPromise=Promise.all(Array.from({length:8},async(_,i)=>{
+    const response=await fetch(`assets/music/part-${i}.bin`);if(!response.ok)throw Error('Music download failed');return response.arrayBuffer();
+  })).then(parts=>{backgroundMusic.src=URL.createObjectURL(new Blob(parts,{type:'audio/mp4'}));}).catch(error=>{musicLoadPromise=null;throw error;});
+  return musicLoadPromise;
+}
+function updateMusicControls(loading=false){
   $('#music').setAttribute('aria-pressed',String(musicOn));$('#music').classList.toggle('playing',musicOn);
-  $('#musicLabel').textContent=loading?'准备音乐…':musicOn?'暂停音乐':'开启音乐';
+  $('#musicLabel').textContent=loading?'加载音乐…':musicOn?'暂停音乐':'开启音乐';
   $('#storyMusic').setAttribute('aria-pressed',String(musicOn));$('#storyMusic').textContent=musicOn?'音乐：开':'音乐：关';
 }
-async function setMusic(on) {
+async function setMusic(on){
   const request=++musicRequest;
-  try {
-    if(on) {
-      const Audio=window.AudioContext||window.webkitAudioContext;
-      if(!Audio){toast('当前浏览器暂不支持音乐播放。');return;}
-      if(!audioContext)audioContext=new Audio();
-      musicOn=true;updateMusicControls(true);
-      await audioContext.resume();
-      if(!musicBufferPromise)musicBufferPromise=createGentleMusicLoop().catch(error=>{musicBufferPromise=null;throw error;});
-      const buffer=await musicBufferPromise;
-      if(request!==musicRequest||!musicOn)return;
-      masterGain=audioContext.createGain();masterGain.gain.value=0;masterGain.connect(audioContext.destination);
-      musicSource=audioContext.createBufferSource();musicSource.buffer=buffer;musicSource.loop=true;musicSource.loopEnd=buffer.duration;
-      musicSource.connect(masterGain);musicSource.start();
-      masterGain.gain.linearRampToValueAtTime(.8,audioContext.currentTime+1.5);
-    } else {
-      musicOn=false;
-      if(musicSource){const oldSource=musicSource,oldGain=masterGain;musicSource=null;const now=audioContext.currentTime;oldGain.gain.cancelScheduledValues(now);oldGain.gain.setValueAtTime(oldGain.gain.value,now);oldGain.gain.linearRampToValueAtTime(0,now+.35);oldSource.onended=()=>{oldSource.disconnect();oldGain.disconnect();};oldSource.stop(now+.4);}
-    }
+  musicOn=on;updateMusicControls(on);
+  if(!on){backgroundMusic.pause();updateMusicControls();return;}
+  try{
+    await loadProvidedMusic();
+    if(request!==musicRequest||!musicOn)return;
+    await backgroundMusic.play();
+    if(request!==musicRequest){if(!musicOn)backgroundMusic.pause();return;}
     updateMusicControls();
-  } catch {
+  }catch(error){
     if(request!==musicRequest)return;
-    musicOn=false;updateMusicControls();toast('音乐暂时无法播放，请再次点击尝试。');
+    musicOn=false;updateMusicControls();
+    if(error.name!=='AbortError')toast('音乐暂时无法播放，请再次点击尝试。');
   }
 }
+backgroundMusic.addEventListener('error',()=>{musicOn=false;updateMusicControls();toast('音乐加载失败，请检查网络后重试。');});
 $('#music').addEventListener('click',()=>setMusic(!musicOn));
 $('#storyMusic').addEventListener('click',()=>setMusic(!musicOn));
 
