@@ -84,7 +84,7 @@ backgroundMusic.loop=true;backgroundMusic.preload='none';backgroundMusic.volume=
 let musicOn=false,musicRequest=0,musicLoadPromise;
 function loadProvidedMusic(){
   if(!musicLoadPromise)musicLoadPromise=Promise.all(Array.from({length:8},async(_,i)=>{
-    const response=await fetch(`assets/music/part-${i}.bin`);if(!response.ok)throw Error('Music download failed');return response.arrayBuffer();
+    const response=await fetch(`assets/music/b37b0687/part-${i}.bin`);if(!response.ok)throw Error('Music download failed');return response.arrayBuffer();
   })).then(parts=>{backgroundMusic.src=URL.createObjectURL(new Blob(parts,{type:'audio/mp4'}));}).catch(error=>{musicLoadPromise=null;throw error;});
   return musicLoadPromise;
 }
